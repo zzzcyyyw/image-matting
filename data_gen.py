@@ -8,26 +8,11 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid                 # 原
-# from config import im_size, lower_bound, upper_bound, fg_path, bg_path, a_path, num_valid # zc
+from config import im_size, unknown_code, fg_path, bg_path, a_path, num_valid
 from utils import safe_crop
 
 # Data augmentation and normalization for training
 # Just normalization for validation
-"""
-原
-"""
-# data_transforms = {
-#     'train': transforms.Compose([
-#         transforms.ColorJitter(brightness=0.125, contrast=0.125, saturation=0.125),
-#         transforms.ToTensor(),
-#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
-#     ]),
-#     'valid': transforms.Compose([
-#         transforms.ToTensor(),
-#         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-#     ]),
-# }
 
 """
 zc
@@ -102,35 +87,19 @@ def process(im_name, bg_name):
 
     return composite4(im, bg, a, w, h)
 
-
-"""
-原
-"""
 def gen_trimap(alpha):
-    k_size = random.choice(range(1, 5))     # zc：随机选择一个膨胀和腐蚀的内核大小
-    iterations = np.random.randint(1, 20)   # zc：随机生成膨胀和腐蚀的迭代次数
-    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k_size, k_size))       # zc：创建膨胀和腐蚀的内核（用于膨胀和腐蚀操作）
+    k_size = random.choice(range(1, 5))     
+    iterations = np.random.randint(1, 20) 
+    kernel = cv.getStructuringElement(cv.MORPH_ELLIPSE, (k_size, k_size))
     dilated = cv.dilate(alpha, kernel, iterations)
     eroded = cv.erode(alpha, kernel, iterations)
     trimap = np.zeros(alpha.shape)
     trimap.fill(128)
     trimap[eroded >= 255] = 255
     trimap[dilated <= 0] = 0
-#
-#     # cv.imshow('Dilated Image', dilated)
-#     # cv.imshow('Eroded Image', eroded)
-#     # cv.imshow('Trimap', trimap)
-#     # cv.waitKey(0)
-#     # cv.destroyAllWindows()
-#
     return trimap
 
 
-# from __future__ import absolute_import, division, print_function
-# import os
-# import numpy as np
-# import torch
-# from torchvision import transforms
 """
 zc
 """
@@ -243,37 +212,21 @@ class DIMDataset(Dataset):
         bg_name = bg_files[bcount]
         img, alpha, fg, bg = process(im_name, bg_name)
 
-        # depth_map = gen_depth(img)                              # zc
-
-        # cv.imshow('img', img)
-        # cv.waitKey(0)
-        # cv.destroyAllWindows()
-
         # crop size 320:640:480 = 1:1:1
         different_sizes = [(320, 320), (480, 480), (640, 640)]
         crop_size = random.choice(different_sizes)
 
         trimap = gen_trimap(alpha)                            # 原
         x, y = random_choice(trimap, crop_size)               # 原
-        # x, y = random_choice(alpha, crop_size)  # zc
         img = safe_crop(img, x, y, crop_size)
         alpha = safe_crop(alpha, x, y, crop_size)
-
-        # trimap = gen_trimap(alpha)                              # 原
 
         # Flip array left to right randomly (prob=1:1)
         if np.random.random_sample() > 0.5:
             img = np.fliplr(img)
-            # trimap = np.fliplr(trimap)                        # 原
             alpha = np.fliplr(alpha)
 
         depth_map = gen_depth(img, self.encoder, self.depth_decoder, self.feed_height, self.feed_width)  # zc
-
-        # depth_map = gen_depth(img)  # zc
-        # cv.imwrite('ceshi/0/' + im_name, depth_map * 255)
-        # depth_map[alpha == 0] = 0.0
-        # depth_map[alpha == 255] = 1.0
-        # cv.imwrite('ceshi/1/' + im_name, depth_map * 255)
 
         x = torch.zeros((4, im_size, im_size), dtype=torch.float)
         img = img[..., ::-1]  # RGB
@@ -281,9 +234,6 @@ class DIMDataset(Dataset):
         img = self.transformer(img)
         x[0:3, :, :] = img
         x[3, :, :] = depth_map
-        # x[3, :, :] = torch.from_numpy(trimap.copy() / 255.)     # 原
-        # x[3, :, :] = torch.from_numpy(depth_map.copy() / 255.)  # zc
-        # depth_map = x[3, :, :]
 
         # y = np.empty((2, im_size, im_size), dtype=np.float32)     # 原
         y = np.empty((1, im_size, im_size), dtype=np.float32)  # zc
