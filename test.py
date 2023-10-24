@@ -203,8 +203,6 @@ if __name__ == '__main__':
         # pred[new_trimap == 0] = 0.0                                             # 原
         # pred[new_trimap == 255] = 1.0                                           # 原
         # cv.imwrite('images/test/out/' + trimap_name, pred * 255)                # 原
-        # pred[alpha == 0.0] = 0.0                                             # zc
-        # pred[alpha == 1.0] = 1.0                                             # zc
         cv.imwrite('images/test/out4/' + depth_map_name, pred * 255)        # zc
 
         # Calculate loss
