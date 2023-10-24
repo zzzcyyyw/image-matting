@@ -101,11 +101,11 @@ class DIMModel(nn.Module):
 
         self.down1 = segnetDown2(self.in_channels, 64)
         self.down2 = segnetDown2(64, 128)
-        # self.down3 = segnetDown3(128, 256)           # 原
-        self.down3 = segnetDown3(128+1, 256)          # zc
+        self.down3 = segnetDown3(128, 256)           # 原
+        # self.down3 = segnetDown3(128+1, 256)          # zc
         self.down4 = segnetDown3(256, 512)
-        # self.down5 = segnetDown3(512, 512)           # 原
-        self.down5 = segnetDown3(512+1, 512)      # zc
+        self.down5 = segnetDown3(512, 512)           # 原
+        # self.down5 = segnetDown3(512+1, 512)      # zc
 
         self.down6 = nn.Conv2d(512, 512, kernel_size=3, padding=1, bias=True)     # zc
         self.up6 =nn.Conv2d(512, 512, kernel_size=1, bias=True)        # zc
@@ -139,7 +139,7 @@ class DIMModel(nn.Module):
         # input_shape = inputs.shape       # zc
         # rgb_inputs = torch.zeros(inputs.shape, dtype=inputs.dtype, device=inputs.device)     # zc
         # rgb_inputs = inputs[:, :3, :, :]            # zc
-        depth_inputs = inputs[:, 3:4, :, :]          # zc
+        # depth_inputs = inputs[:, 3:4, :, :]          # zc
 
         down1_1, down1, indices_1, unpool_shape1 = self.down1(inputs)        # 原
         # down1_1, down1, indices_1, unpool_shape1 = self.down1(rgb_inputs)    # zc
@@ -147,10 +147,9 @@ class DIMModel(nn.Module):
         # down1 = down1 + depth_inputs_down1  # zc
 
         down2_1, down2, indices_2, unpool_shape2 = self.down2(down1)
-        depth_inputs_down2 = torch.nn.functional.interpolate(depth_inputs, size=down2.size()[2:], mode="bilinear", align_corners=False)     # zc
+        # depth_inputs_down2 = torch.nn.functional.interpolate(depth_inputs, size=down2.size()[2:], mode="bilinear", align_corners=False)     # zc
         # depth_inputs_down2 = torch.nn.functional.interpolate(depth_inputs, size=down2.size()[2:])     # zc
-        #
-        down2 = torch.cat([down2, depth_inputs_down2], dim=1)            # zc
+        # down2 = torch.cat([down2, depth_inputs_down2], dim=1)            # zc
         # down2 = down2 + depth_inputs_down2      # zc
 
         down3_1, down3, indices_3, unpool_shape3 = self.down3(down2)
@@ -159,9 +158,9 @@ class DIMModel(nn.Module):
         # down3 = down3 + depth_inputs_down3  # zc
 
         down4_1, down4, indices_4, unpool_shape4 = self.down4(down3)
-        depth_inputs_down4 = torch.nn.functional.interpolate(depth_inputs, size=down4.size()[2:], mode="bilinear", align_corners=False)  # zc
+        # depth_inputs_down4 = torch.nn.functional.interpolate(depth_inputs, size=down4.size()[2:], mode="bilinear", align_corners=False)  # zc
         # depth_inputs_down4 = torch.nn.functional.interpolate(depth_inputs, size=down4.size()[2:])       # zc
-        down4 = torch.cat([down4, depth_inputs_down4], dim=1)       # zc
+        # down4 = torch.cat([down4, depth_inputs_down4], dim=1)       # zc
         # down4 = down4 + depth_inputs_down4
 
         down5_1, down5, indices_5, unpool_shape5 = self.down5(down4)
